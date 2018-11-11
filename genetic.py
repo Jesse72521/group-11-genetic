@@ -2,13 +2,30 @@ import string
 import random
 
 INDIVIDUAL_LENGTH = 8
+MATCH_STRING = "1234567812345678" #make sure this is the same length as INDIVIDUAL_LENGTH
+POPULATION_SIZE = 16
+NUMBER_OF_TICKETS_PER_CORRECT_LETTER = 1
+RANDOM_PERCENTAGE = 2 # 2 = 20 percent, 6 = 60%, etc.
+ALLOWED_ERROR = 6 #how "perfect" our final individual has to be (0 here would mean it must be perfect)
+
+# the only other variable you might have to change other than the ones above
+# is in the randomword function.  Right now the first letter it can select is 1
+# if you want to go binary between 1's and zero's you might want to change that there
+# you would also have to adjust your match string accordingly if you are chaning
+# the amounts of digits per letter
+DIGITS_PER_LETTER = 8
+
+
+
+
 
 # This function will create a string of digits 'length'
 # digits long.
 def randomword(length):
     letters = []
     for i in range(0, INDIVIDUAL_LENGTH):
-        letters.append(str(random.randint(1,8)))
+        # letters.append(str(random.randint(0,1))) # used for binary
+        letters.append(str(random.randint(1,DIGITS_PER_LETTER)))
     return ''.join(letters)
 
 
@@ -19,11 +36,8 @@ def fitnessCalc(_population):
     for x in range(0, len(_population)):
         wordScores.append(0)
         for i in range(0,INDIVIDUAL_LENGTH):
-            # these two lines below are if i'm just trying to get a string of '1's
-            # if _population[x][i] == '1':
-            #     wordScores[x] = wordScores[x] + 20
-            if _population[x][i] == str(i+1):
-                wordScores[x] = wordScores[x] + 20
+            if _population[x][i] == MATCH_STRING[i]:
+                wordScores[x] = wordScores[x] + NUMBER_OF_TICKETS_PER_CORRECT_LETTER
     return wordScores
 
 # will randomly select two individuals (returns their indexes), this is based on the example on page
@@ -60,12 +74,10 @@ def geneticAlgorithm(_population, _fitnessCalc):
         newPopFitnessScores = _fitnessCalc(newPopulation)
         testPopulation = newPopulation
         for x in range(0, len(newPopFitnessScores)):
-            if newPopFitnessScores[x] >= 160:
+            if newPopFitnessScores[x] >= (NUMBER_OF_TICKETS_PER_CORRECT_LETTER * (INDIVIDUAL_LENGTH - ALLOWED_ERROR)):
                 fitEnough = True
                 print("individual found at index " +str(x) + ": " + str(newPopulation[x]))
-                print("final population results after " + str(reproductionCount) + " reproduction cycles: " )
-                for x in newPopulation:
-                    print(str(x))
+                print("final population results after " + str(reproductionCount) + " reproductive generations: " )
 
 def reproduce(individual1, individual2):
     randomSliceArea = random.randint(0, len(individual1))
@@ -77,27 +89,20 @@ def reproduce(individual1, individual2):
         returnIndividual = list(individual1)
         for i in range (0, randomSliceArea):
             returnIndividual[i] = individual2[i]
-    # random mutation (20% of the time on this setup)
-    if(random.randint(0,9) < 2):
-        returnIndividual[random.randint(0,7)] = str(random.randint(1,8))
+    if(random.randint(1,10) <= RANDOM_PERCENTAGE):
+        returnIndividual[random.randint(0,INDIVIDUAL_LENGTH - 1)] = str(random.randint(1,DIGITS_PER_LETTER))
     return ''.join(returnIndividual)
 
 
 population = []
-for i in range (0,16):
+for i in range (0,POPULATION_SIZE):
     population.append(randomword(INDIVIDUAL_LENGTH))
 
-print("starting population members:")
-for x in population:
-    print(str(x))
-
-
+# print("starting population members:")
+# for x in population:
+#     print(str(x))
 
 wordScores = fitnessCalc(population)
-
-# for x in wordScores:
-#     print(x)
-
 geneticAlgorithm(population, fitnessCalc)
 
 
